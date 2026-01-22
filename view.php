@@ -127,9 +127,9 @@ $user_info_secondary = date('d/m/Y') . " - " . date('H:i');
         height: 100%;
     }
     .wm-text {
-        font-family: 'Ubuntu Mono', monospace; /* Fuente solicitada */
-        font-weight: 700;
-        fill: var(--wm-color, rgba(0,0,0,0.2));
+        font-family: 'Ubuntu Mono', monospace; /* */
+        font-weight: 600; /* */
+        fill: rgba(150, 150, 150, 0.50); /* El color exacto que pediste */
         pointer-events: none;
         text-transform: uppercase;
     }
@@ -203,13 +203,13 @@ if ($capsula->showmode == 0 || $capsula->showmode == 1) {
         
         <div class="capsula-viewer-wrapper no-select" oncontextmenu="return false;">
             <!-- Watermark Pattern (Light for Dark Video) -->
-            <div class="capsula-watermark-overlay" style="--wm-color: rgba(255,255,255,0.1); z-index: 100;">
+            <div class="capsula-watermark-overlay" style="z-index: 100;">
                 <svg width="100%" height="100%">
                     <defs>
-                        <pattern id="wm-pattern-video" x="0" y="0" width="600" height="600" patternUnits="userSpaceOnUse">
-                             <text x="300" y="300" text-anchor="middle" dominant-baseline="middle" transform="rotate(-35 300 300)" class="wm-text">
-                                 <tspan x="300" dy="-10" font-size="22px"><?php echo $watermark_line_1; ?></tspan>
-                                 <tspan x="300" dy="30" font-size="16px"><?php echo $watermark_line_2; ?></tspan>
+                        <pattern id="wm-pattern-video" x="0" y="0" width="800" height="800" patternUnits="userSpaceOnUse">
+                             <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" transform="rotate(-28 400 400)" class="wm-text">
+                                 <tspan x="400" dy="-10" font-size="30px"><?php echo $watermark_line_1; ?></tspan>
+                                 <tspan x="400" dy="40" font-size="20px"><?php echo $watermark_line_2; ?></tspan>
                              </text>
                         </pattern>
                     </defs>
@@ -249,13 +249,13 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
                 
                 <!-- Watermark Pattern (Dark for White PDF) -->
                 <!-- Note: z-index must be higher than canvas. Canvas z-index is 50 in CSS above, so overlay needs >50 -->
-                <div class="capsula-watermark-overlay" style="--wm-color: rgba(0,0,0,0.15); z-index: 200;">
+                <div class="capsula-watermark-overlay" style="z-index: 200;">
                     <svg width="100%" height="100%">
                         <defs>
-                            <pattern id="wm-pattern-pdf" x="0" y="0" width="600" height="600" patternUnits="userSpaceOnUse">
-                                 <text x="300" y="300" text-anchor="middle" dominant-baseline="middle" transform="rotate(-35 300 300)" class="wm-text">
-                                     <tspan x="300" dy="-10" font-size="22px"><?php echo $watermark_line_1; ?></tspan>
-                                     <tspan x="300" dy="30" font-size="16px"><?php echo $watermark_line_2; ?></tspan>
+                            <pattern id="wm-pattern-pdf" x="0" y="0" width="800" height="800" patternUnits="userSpaceOnUse">
+                                 <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" transform="rotate(-28 400 400)" class="wm-text">
+                                     <tspan x="400" dy="-10" font-size="30px"><?php echo $watermark_line_1; ?></tspan>
+                                     <tspan x="400" dy="40" font-size="20px"><?php echo $watermark_line_2; ?></tspan>
                                  </text>
                             </pattern>
                         </defs>
