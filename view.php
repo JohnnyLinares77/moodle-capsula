@@ -5,6 +5,7 @@ $id = required_param('id', PARAM_INT);
 $cm = get_coursemodule_from_id('capsula', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $capsula = $DB->get_record('capsula', array('id' => $cm->instance), '*', MUST_EXIST);
+$capsula->showmode = (int)$capsula->showmode; // Ensure integer type
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
@@ -248,21 +249,29 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
 
         <script>
             let pdfDoc = null;
-            let currentScale = 1.0;
+            let currentScale = 'auto'; // Default to auto-fit
             const pdfUrl = '<?php echo $purl; ?>';
 
-            // Security: Disable Context Menu & Shortcuts
+            // Security
             document.addEventListener('contextmenu', event => event.preventDefault());
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
-                    e.preventDefault();
-                }
+            document.addEventListener('keydown', e => {
+                if ((e.ctrlKey || e.metaKey) && ['s','p','u'].includes(e.key)) e.preventDefault();
             });
 
-            // Load PDF
             pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
                 pdfDoc = pdf;
-                renderAllPages(currentScale);
+                // Calculate Auto-Fit Scale based on first page
+                pdf.getPage(1).then(page => {
+                    const container = document.getElementById('capsula-pdf-wrapper');
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    
+                    // Fit width with small margin
+                    const computedScale = (container.clientWidth / viewport.width) * 0.95;
+                    currentScale = computedScale;
+                    
+                    // Render
+                    renderAllPages(currentScale);
+                });
             }).catch(err => {
                 console.error("Error loading PDF: " + err);
                 const container = document.getElementById('pdf-render-layer');
@@ -271,58 +280,51 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
 
             function renderAllPages(scale) {
                 const container = document.getElementById('pdf-render-layer');
-                if(!container) return;
+                if(!container || !pdfDoc) return;
                 
                 container.innerHTML = '';
                 const zoomLabel = document.getElementById('zoom-level');
                 if(zoomLabel) zoomLabel.innerText = Math.round(scale * 100) + "%";
 
-                const renderPage = (num) => {
-                    if (num > pdfDoc.numPages) return;
-
-                    pdfDoc.getPage(num).then(page => {
-                        // High DPI Rendering: Render at 1.5x requested scale
-                        const outputScale = scale * 1.5;
-                        const viewport = page.getViewport({ scale: outputScale });
-
+                const range = Array.from({length: pdfDoc.numPages}, (_, i) => i + 1);
+                
+                // Sequential rendering to maintain order
+                range.reduce((promise, num) => {
+                    return promise.then(() => pdfDoc.getPage(num).then(page => {
+                        const viewport = page.getViewport({ scale: scale * 1.5 }); // High DPI
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
                         
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
                         
-                        // Visual Size (CSS)
-                        // We set width ensuring it respects CSS max-width 95%
-                        const displayWidth = viewport.width / 1.5;
-                        canvas.style.width = displayWidth + "px";
-                        // Remove height restriction to maintain aspect ratio
-                        canvas.style.height = "auto"; 
-                        canvas.style.maxWidth = "95%"; // Responsive constraint
-
+                        // Visual Style
+                        // We use the exact computed width based on scale
+                        const visualWidth = viewport.width / 1.5;
+                        canvas.style.width = visualWidth + "px";
+                        canvas.style.height = "auto";
+                        canvas.style.maxWidth = "100%"; // Ensure it never overflows container width
+                        
                         container.appendChild(canvas);
 
                         const renderContext = {
                             canvasContext: context,
                             viewport: viewport
                         };
-                        
-                        page.render(renderContext).promise.then(() => {
-                            renderPage(num + 1);
-                        });
-                    });
-                };
-                renderPage(1);
+                        return page.render(renderContext).promise;
+                    }));
+                }, Promise.resolve());
             }
 
             function zoomIn() {
                 if (currentScale >= 3.0) return;
-                currentScale += 0.25;
+                currentScale += 0.20; // Smoother steps
                 renderAllPages(currentScale);
             }
 
             function zoomOut() {
-                if (currentScale <= 0.5) return;
-                currentScale -= 0.25;
+                if (currentScale <= 0.4) return;
+                currentScale -= 0.20;
                 renderAllPages(currentScale);
             }
         </script>
