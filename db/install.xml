@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <TABLE NAME="capsula" COMMENT="Tabla para la Capsula Hibrida">
-        <FIELDS>
-            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-            <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-            <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
-            <FIELD NAME="intro" TYPE="text" NOTNULL="false"/>
-            <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0"/>
-            <FIELD NAME="showmode" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" COMMENT="0:Ambos, 1:Video, 2:PDF"/>
-            <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
-        </FIELDS>
-        <KEYS>
-            <PRIMARY KEY="1" FIELDS="id"/>
-        </KEYS>
-    </TABLE>
+<XMLDB PATH="mod/capsula/db" VERSION="2026012102" COMMENT="XMLDB file for Moodle mod/capsula"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+    <TABLES>
+        <TABLE NAME="capsula" COMMENT="Tabla para la Capsula Hibrida">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
+                <FIELD NAME="intro" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="showmode" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" COMMENT="0:Ambos, 1:Video, 2:PDF"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+            </FIELDS>
+            <KEYS>
+                <PRIMARY KEY="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
 </XMLDB>
