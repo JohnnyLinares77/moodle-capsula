@@ -1,236 +1,116 @@
 <?php
 require_once('../../config.php');
-require_once('lib.php');
 
-$id = required_param('id', PARAM_INT); // ID del Course Module
-$cm = get_coursemodule_from_id('visorpdf', $id, 0, false, MUST_EXIST);
+$id = required_param('id', PARAM_INT);
+$cm = get_coursemodule_from_id('capsula', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$visorpdf = $DB->get_record('visorpdf', array('id' => $cm->instance), '*', MUST_EXIST);
+$capsula = $DB->get_record('capsula', array('id' => $cm->instance), '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/visorpdf:view', $context);
 
-// 1. Obtener el archivo de la tabla m_files
-$fs = get_file_storage();
-$files = $fs->get_area_files($context->id, 'mod_visorpdf', 'content', 0, 'itemid, filepath, filename', false);
+// Trigger module viewed event.
+$event = \mod_capsula\event\course_module_viewed::create(array(
+    'objectid' => $capsula->id,
+    'context' => $context,
+));
+$event->add_record_snapshot('course', $course);
+$event->add_record_snapshot('capsula', $capsula);
+$event->trigger();
 
-if (empty($files)) {
-    print_error('filenotfound', 'error');
-}
-
-$file = reset($files);
-// Generar la URL protegida
-$fileurl = moodle_url::make_pluginfile_url($context->id, 'mod_visorpdf', 'content', 0, $file->get_filepath(), $file->get_filename());
-
-$PAGE->set_url('/mod/visorpdf/view.php', array('id' => $cm->id));
-$PAGE->set_title(format_string($visorpdf->name));
-$PAGE->set_heading($course->fullname);
+// Print header
+$PAGE->set_url('/mod/capsula/view.php', array('id' => $id));
+$PAGE->set_title(format_string($capsula->name));
+$PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
+echo $OUTPUT->heading(format_string($capsula->name));
 
-// Datos para la marca de agua
-$user_info = $USER->firstname . ' ' . $USER->lastname . ' - ' . $USER->email;
-$date_info = userdate(time(), '%d/%m/%Y %H:%M');
-$watermark_text = $user_info . ' - ' . $date_info;
+if ($capsula->intro) {
+    echo $OUTPUT->box(format_module_intro('capsula', $capsula, $cm->id), 'generalbox mod_introbox', 'intro');
+}
 
-?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<style>
-    /* Contenedor Principal */
-    #pdf-wrapper {
-        position: relative;
-        background: #525659;
-        width: 100%;
-        height: 85vh; /* Alto adaptable */
-        display: flex;
-        flex-direction: column;
-        border: 1px solid #ccc;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+$fs = get_file_storage();
+
+// 1. Mostrar VIDEO (si aplica)
+if ($capsula->showmode == 0 || $capsula->showmode == 1) {
+    $video_files = $fs->get_area_files($context->id, 'mod_capsula', 'video', 0, 'sortorder, itemid, filepath, filename', false);
+    if ($video_files) {
+        $video = reset($video_files);
+        $vurl = moodle_url::make_pluginfile_url($context->id, 'mod_capsula', 'video', 0, '/', $video->get_filename());
+        echo "<div style='text-align:center; margin-bottom:30px;'>
+                <video width='85%' height='auto' controls controlsList='nodownload' oncontextmenu='return false;'>
+                    <source src='$vurl' type='".$video->get_mimetype()."'>
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+              </div>";
     }
+}
 
-    /* Barra de Herramientas (Zoom) */
-    #toolbar {
-        background: #333;
-        color: #fff;
-        padding: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-        z-index: 20;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-    #toolbar button {
-        background: #444;
-        border: 1px solid #666;
-        color: white;
-        padding: 5px 12px;
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: bold;
-    }
-    #toolbar button:hover { background: #666; }
-    #page-count { font-family: monospace; }
-
-    /* Área de Scroll */
-    #pdf-container {
-        flex: 1;
-        overflow: auto;
-        position: relative;
-        text-align: center;
-        padding: 20px;
-        user-select: none; /* Evita seleccionar texto */
-    }
-
-    /* Lienzos (Páginas) */
-    canvas {
-        display: block;
-        margin: 0 auto 20px auto;
-        box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        max-width: 100%; /* Responsive: no desbordar ancho contenedor */
-        height: auto;
-    }
-
-    /* Marca de Agua (Overlay CSS puro) */
-    .watermark-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%; /* Crece con el scroll del contenedor */
-        pointer-events: none; /* Permite scroll y clicks a través */
-        z-index: 10;
-        overflow: hidden;
-        display: flex;
-        flex-wrap: wrap;
-        align-content: flex-start;
-        justify-content: space-around;
-        gap: 100px; /* Espaciado entre repeticiones */
-        padding-top: 50px;
-    }
-
-    .watermark-text {
-        color: rgba(255, 0, 0, 0.15); /* Rojo semitransparente */
-        font-size: 22px;
-        font-family: sans-serif;
-        transform: rotate(-30deg);
-        white-space: nowrap;
-        font-weight: bold;
-        user-select: none;
-    }
-
-    /* Bloqueo de Impresión */
-    @media print { body { display: none !important; } }
-</style>
-
-<div id="pdf-wrapper">
-    <!-- Barra de Herramientas -->
-    <div id="toolbar">
-        <button onclick="zoomOut()">-</button>
-        <button onclick="zoomReset()">100%</button>
-        <button onclick="zoomIn()">+</button>
-    </div>
-
-    <!-- Contenedor con Scroll -->
-    <div id="pdf-container" oncontextmenu="return false;">
-        <!-- Capa de Marca de Agua -->
-        <div class="watermark-container" id="watermark-layer">
-            <!-- Se rellenará con JS o PHP, usaremos PHP para server-side render inicial -->
-            <?php 
-                // Generamos muchas repeticiones para cubrir un documento largo
-                for($i=0; $i<100; $i++) {
-                    echo '<div class="watermark-text">' . $watermark_text . '</div>';
-                }
-            ?>
+// 2. Mostrar PDF con PDF.js y Marca de Agua (si aplica)
+if ($capsula->showmode == 0 || $capsula->showmode == 2) {
+    $pdf_files = $fs->get_area_files($context->id, 'mod_capsula', 'pdf', 0, 'sortorder, itemid, filepath, filename', false);
+    if ($pdf_files) {
+        $pdf = reset($pdf_files);
+        $purl = moodle_url::make_pluginfile_url($context->id, 'mod_capsula', 'pdf', 0, '/', $pdf->get_filename());
+        ?>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+        <style>
+            #pdf-container { position: relative; background: #333; height: 800px; overflow: auto; border: 1px solid #ccc; }
+            .watermark { position: absolute; top: 0; left: 0; width:100%; height:100%; pointer-events:none; z-index:100; opacity:0.15; 
+                          font-size:24px; color:rgba(255, 0, 0, 0.5); transform:rotate(-45deg); display:flex; flex-wrap:wrap; justify-content: space-around; align-content: space-around; overflow: hidden;}
+            .watermark span { margin: 50px; white-space: nowrap; transform: rotate(-45deg); }
+            canvas { display: block; margin: 0 auto 10px auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        </style>
+        <div id="pdf-container" oncontextmenu="return false;">
+            <div class="watermark">
+                <?php 
+                    // Generar marca de agua repetida
+                    $watermark_text = $USER->username . " - " . date('d/m/Y H:i');
+                    for($i=0; $i<50; $i++) echo "<span>" . $watermark_text . "</span>"; 
+                ?>
+            </div>
+            <div id="pdf-render"></div>
         </div>
-        
-        <!-- Aquí se dibujan los canvas -->
-        <div id="pdf-render"></div>
-    </div>
-</div>
+        <script>
+            // Deshabilitar click derecho y teclas de guardar
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p')) {
+                    e.preventDefault();
+                }
+            });
 
-<script>
-    const url = '<?php echo $fileurl; ?>';
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    let pdfDoc = null;
-    let currentScale = 1.2; // Zoom inicial
-    let isRendering = false;
-
-    // Cargar Documento
-    pdfjsLib.getDocument(url).promise.then(pdf => {
-        pdfDoc = pdf;
-        renderAllPages();
-    }).catch(err => {
-        console.error('Error cargando PDF:', err);
-        document.getElementById('pdf-render').innerHTML = '<p style="color:white;">Error cargando el documento.</p>';
-    });
-
-    // Función para renderizar todas las páginas
-    function renderAllPages() {
-        const container = document.getElementById('pdf-render');
-        container.innerHTML = ''; // Limpiar canvas previos
-
-        for (let i = 1; i <= pdfDoc.numPages; i++) {
-            renderPage(i);
-        }
-        
-        // Ajustar altura de la capa de marca de agua
-        setTimeout(() => {
-            const contentHeight = container.scrollHeight;
-            document.getElementById('watermark-layer').style.height = (contentHeight + 500) + 'px'; 
-        }, 1000);
-    }
-
-    // Renderizar una página individual
-    function renderPage(num) {
-        pdfDoc.getPage(num).then(page => {
-            const viewport = page.getViewport({ scale: currentScale });
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            const pdfjsLib = window['pdfjs-dist/build/pdf'];
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
             
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            document.getElementById('pdf-render').appendChild(canvas);
-
-            page.render({ canvasContext: ctx, viewport: viewport });
-        });
+            const url = '<?php echo $purl; ?>';
+            
+            pdfjsLib.getDocument(url).promise.then(pdf => {
+                const container = document.getElementById('pdf-render');
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    pdf.getPage(i).then(page => {
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        container.appendChild(canvas);
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                }
+            }).catch(error => {
+                console.error('Error loading PDF:', error);
+                document.getElementById('pdf-render').innerText = 'Error loading PDF document.';
+            });
+        </script>
+        <?php
     }
+}
 
-    // Controles de Zoom
-    function zoomIn() {
-        currentScale += 0.2;
-        renderAllPages();
-    }
-
-    function zoomOut() {
-        if (currentScale > 0.6) {
-            currentScale -= 0.2;
-            renderAllPages();
-        }
-    }
-
-    function zoomReset() {
-        currentScale = 1.2;
-        renderAllPages();
-    }
-
-    // Bloqueos de teclado
-    document.addEventListener('keydown', e => {
-        if (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u' || e.key === 'Shift')) {
-            e.preventDefault();
-        }
-    });
-
-    // Auto-ajuste de altura de marca de agua al hacer scroll infinito
-    const scrollContainer = document.getElementById('pdf-container');
-    scrollContainer.addEventListener('scroll', () => {
-         // Lógica opcional si se necesitara recargar marcas de agua
-    });
-</script>
-
-<?php
 echo $OUTPUT->footer();
