@@ -109,35 +109,26 @@ $user_info_secondary = date('d/m/Y') . " - " . date('H:i');
         align-items: center;
     }
 
-    /* Message Overlay */
-    .capsula-info-overlay {
+    /* Watermark Overlay (Repeated Pattern) */
+    .capsula-watermark-overlay {
         position: absolute;
-        top: 20px;
-        left: 20px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         z-index: 100;
         pointer-events: none;
-        background-color: rgba(0, 0, 0, 0.65);
-        padding: 10px 15px;
-        border-radius: 6px;
-        color: rgba(255, 255, 255, 0.9);
-        font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
-        font-size: 14px;
-        line-height: 1.4;
-        backdrop-filter: blur(4px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        overflow: hidden;
     }
-    .capsula-info-line {
-        display: block;
-        white-space: nowrap;
+    .capsula-watermark-overlay svg {
+        width: 100%;
+        height: 100%;
     }
-    .capsula-info-primary {
-        font-weight: 500;
-        color: #fff;
-    }
-    .capsula-info-secondary {
-        font-size: 0.9em;
-        color: #ccc;
-        margin-top: 2px;
+    .wm-text {
+        font-family: 'Roboto', Arial, sans-serif;
+        font-weight: bold;
+        font-size: 20px;
+        fill: var(--wm-color, rgba(255,255,255,0.1));
     }
 
     /* Video Player */
@@ -184,6 +175,8 @@ $user_info_secondary = date('d/m/Y') . " - " . date('H:i');
         /* Allow landscape to fit */
         max-width: 95%; 
         height: auto;
+        position: relative;
+        z-index: 50; /* Ensure PDF is above background */
     }
 
     .no-select {
@@ -193,6 +186,10 @@ $user_info_secondary = date('d/m/Y') . " - " . date('H:i');
 </style>
 
 <?php
+// --- PREPARE USER DATA FOR OVERLAY ---
+$watermark_line_1 = "{$USER->firstname} {$USER->lastname} - {$USER->email}";
+$watermark_line_2 = date('d/m/Y') . " - " . date('H:i');
+
 // --- 1. VIDEO RENDERING ---
 if ($capsula->showmode == 0 || $capsula->showmode == 1) {
     $video_files = $fs->get_area_files($context->id, 'mod_capsula', 'video', 0, 'sortorder, itemid, filepath, filename', false);
@@ -202,9 +199,19 @@ if ($capsula->showmode == 0 || $capsula->showmode == 1) {
         ?>
         
         <div class="capsula-viewer-wrapper no-select" oncontextmenu="return false;">
-            <div class="capsula-info-overlay">
-                <span class="capsula-info-line capsula-info-primary"><?php echo $user_info_primary; ?></span>
-                <span class="capsula-info-line capsula-info-secondary"><?php echo $user_info_secondary; ?></span>
+            <!-- Watermark Pattern (Light for Dark Video) -->
+            <div class="capsula-watermark-overlay" style="--wm-color: rgba(255,255,255,0.08);">
+                <svg>
+                    <defs>
+                        <pattern id="wm-pattern-video" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+                             <text x="200" y="200" text-anchor="middle" dominant-baseline="middle" transform="rotate(-45 200 200)" class="wm-text">
+                                 <tspan x="200" dy="-10"><?php echo $watermark_line_1; ?></tspan>
+                                 <tspan x="200" dy="25"><?php echo $watermark_line_2; ?></tspan>
+                             </text>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#wm-pattern-video)" />
+                </svg>
             </div>
             
             <div class="capsula-content">
@@ -236,9 +243,21 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
             </div>
 
             <div class="capsula-content" style="position: relative;">
-                <div class="capsula-info-overlay">
-                    <span class="capsula-info-line capsula-info-primary"><?php echo $user_info_primary; ?></span>
-                    <span class="capsula-info-line capsula-info-secondary"><?php echo $user_info_secondary; ?></span>
+                
+                <!-- Watermark Pattern (Dark for White PDF) -->
+                <!-- Note: z-index must be higher than canvas. Canvas z-index is 50 in CSS above, so overlay needs >50 -->
+                <div class="capsula-watermark-overlay" style="--wm-color: rgba(0,0,0,0.12); z-index: 200;">
+                    <svg>
+                        <defs>
+                            <pattern id="wm-pattern-pdf" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+                                 <text x="200" y="200" text-anchor="middle" dominant-baseline="middle" transform="rotate(-45 200 200)" class="wm-text">
+                                     <tspan x="200" dy="-10"><?php echo $watermark_line_1; ?></tspan>
+                                     <tspan x="200" dy="25"><?php echo $watermark_line_2; ?></tspan>
+                                 </text>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#wm-pattern-pdf)" />
+                    </svg>
                 </div>
 
                 <div id="pdf-scroll-container" oncontextmenu="return false;" class="no-select">
