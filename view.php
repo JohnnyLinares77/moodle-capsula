@@ -34,11 +34,6 @@ $fs = get_file_storage();
 
 
 // --- RENDERING START ---
-
-// The legacy simplified viewer code has been removed in favor of the enhanced viewer below.
-
-
-echo $OUTPUT->footer();
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
@@ -362,4 +357,7 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
         <?php
     }
 }
+
+echo $OUTPUT->footer();
+
 
