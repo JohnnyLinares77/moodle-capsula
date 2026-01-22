@@ -17,11 +17,15 @@ class mod_visorpdf_mod_form extends moodleform_mod {
         // Descripción estándar (intro + introformat).
         $this->standard_intro_elements();
 
-        // Campo para URL o ID de archivo de Drive.
-        $mform->addElement('text', 'driveurl', get_string('driveurl', 'mod_visorpdf'), ['size' => 80]);
-        $mform->setType('driveurl', PARAM_RAW); // Permitimos URL completa.
-        $mform->addRule('driveurl', null, 'required', null, 'client');
-        $mform->addHelpButton('driveurl', 'driveurl', 'mod_visorpdf');
+        // Selector de archivos optimizado para Google Drive
+        $filemanager_options = [
+            'subdirs' => 0,
+            'maxfiles' => 1,
+            'accepted_types' => ['.pdf'],
+            'return_types' => FILE_REFERENCE | FILE_INTERNAL 
+        ];
+
+        $mform->addElement('filepicker', 'drivefile', get_string('file'), null, $filemanager_options);
 
         // *** OJO: ya no mostramos 'height' (lo eliminamos, ver paso 2). ***
 

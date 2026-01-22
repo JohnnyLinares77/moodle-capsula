@@ -20,55 +20,23 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 // Render
+$context = context_module::instance($cm->id);
+$fs = get_file_storage();
+// Obtener el archivo del área 'content'
+$files = $fs->get_area_files($context->id, 'mod_visorpdf', 'content', 0, 'id', false);
+
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($visorpdf->name));
 
-// Intro
-if (!empty($visorpdf->intro)) {
-    echo $OUTPUT->box(
-        format_module_intro('visorpdf', $visorpdf, $cm->id),
-        'generalbox mod_introbox',
-        'visorpdfintro'
+if ($files) {
+    $file = reset($files);
+    // Generar URL interna que usa el OAuth2 configurado
+    $url = moodle_url::make_pluginfile_url(
+        $file->get_contextid(), $file->get_component(), $file->get_filearea(), 
+        $file->get_itemid(), $file->get_filepath(), $file->get_filename()
     );
+
+    echo $OUTPUT->heading(format_string($visorpdf->name));
+    echo '<iframe src="'.$url->out().'" style="width:100%; height:800px; border:none;"></iframe>';
 }
-
-// Contenedor principal
-echo html_writer::start_div('mod_visorpdf_wrapper');
-echo html_writer::start_div('mod_visorpdf_viewer');
-
-// Ícono del engranaje
-$gearicon = new moodle_url('/mod/visorpdf/gear.svg');
-
-// Overlay del engranaje (oculta el botón de Drive)
-echo html_writer::start_div('mod_visorpdf_cover');
-echo html_writer::empty_tag('img', [
-    'src'   => $gearicon,
-    'alt'   => '',
-    'class' => 'mod_visorpdf_cover_icon'
-]);
-echo html_writer::end_div(); // mod_visorpdf_cover
-
-// MARCA DE AGUA
-$watermarktext =
-    fullname($USER) . " - " .
-    $USER->email . " - " .
-    userdate(time(), '%d/%m/%Y %H:%M');
-
-// Render de la marca de agua
-echo html_writer::div(
-    $watermarktext,
-    'mod_visorpdf_watermark'
-);
-
-// Iframe (visor de Google Drive)
-echo html_writer::tag('iframe', '', [
-    'src'             => $visorpdf->embedurl,
-    'frameborder'     => '0',
-    'allowfullscreen' => 'true',
-    'loading'         => 'lazy',
-]);
-
-echo html_writer::end_div(); // mod_visorpdf_viewer
-echo html_writer::end_div(); // mod_visorpdf_wrapper
 
 echo $OUTPUT->footer();

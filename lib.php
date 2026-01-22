@@ -48,59 +48,33 @@ function visorpdf_extract_fileid(string $input): string {
 /**
  * Crea una instancia nueva de visorpdf.
  */
-function visorpdf_add_instance(stdClass $data, mod_visorpdf_mod_form $mform = null) {
-    global $DB, $USER;
+function visorpdf_add_instance($data) {
+    global $DB;
+    $data->timemodified = time();
+    $id = $DB->insert_record('visorpdf', $data);
+    $data->id = $id;
 
-    $data->timecreated  = time();
-    $data->timemodified = $data->timecreated;
+    // Guardar el alias del archivo
+    $context = context_module::instance($data->coursemodule);
+    file_save_draft_area_files($data->drivefile, $context->id, 'mod_visorpdf', 'content', 0);
 
-    // Normalizar fileid y embedurl.
-    $fileid        = visorpdf_extract_fileid($data->driveurl);
-    $data->fileid  = $fileid;
-    $data->embedurl = "https://drive.google.com/file/d/{$fileid}/preview";
-
-    // Altura por defecto si no viene.
-    if (empty($data->height)) {
-        $data->height = 600;
-    }
-
-    // Procesar intro estándar de Moodle.
-    if (!isset($data->intro)) {
-        $data->intro = '';
-    }
-    if (!isset($data->introformat)) {
-        $data->introformat = FORMAT_HTML;
-    }
-
-    return $DB->insert_record('visorpdf', $data);
+    return $id;
 }
 
 /**
  * Actualiza una instancia existente.
  */
-function visorpdf_update_instance(stdClass $data, mod_visorpdf_mod_form $mform = null) {
+function visorpdf_update_instance($data) {
     global $DB;
-
-    $data->id           = $data->instance;
     $data->timemodified = time();
+    $data->id = $data->instance;
+    $DB->update_record('visorpdf', $data);
 
-    // Normalizar fileid y embedurl.
-    $fileid        = visorpdf_extract_fileid($data->driveurl);
-    $data->fileid  = $fileid;
-    $data->embedurl = "https://drive.google.com/file/d/{$fileid}/preview";
+    // Actualizar el archivo
+    $context = context_module::instance($data->coursemodule);
+    file_save_draft_area_files($data->drivefile, $context->id, 'mod_visorpdf', 'content', 0);
 
-    if (empty($data->height)) {
-        $data->height = 600;
-    }
-
-    if (!isset($data->intro)) {
-        $data->intro = '';
-    }
-    if (!isset($data->introformat)) {
-        $data->introformat = FORMAT_HTML;
-    }
-
-    return $DB->update_record('visorpdf', $data);
+    return true;
 }
 
 /**
