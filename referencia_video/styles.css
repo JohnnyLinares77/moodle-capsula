@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
+
+.mod_drivevideo_wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.mod_drivevideo_viewer {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    background: #111;
+    overflow: hidden;
+}
+
+.mod_drivevideo_viewer iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Overlay vertical del engranaje */
+.mod_drivevideo_cover {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    width: 64px;
+    height: 88px;
+    background: #202020;
+    border-radius: 12px;
+    z-index: 999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mod_drivevideo_cover_icon {
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+    filter: brightness(0) invert(1); /* Blanco */
+}
+
+/* Marca de agua diagonal */
+.mod_drivevideo_watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-28deg);
+
+    font-family: 'Ubuntu Mono', monospace;
+    font-size: 40px;
+    font-weight: 600;
+    color: rgba(150, 150, 150, 0.50);
+
+    white-space: nowrap;
+    pointer-events: none;
+    width: 200%;
+    text-align: center;
+    z-index: 10;
+}
