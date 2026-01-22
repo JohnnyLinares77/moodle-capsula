@@ -46,6 +46,8 @@ $user_info_secondary = date('d/m/Y') . " - " . date('H:i');
 
 <!-- Styles -->
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
+
     :root {
         --viewer-bg: #202124;
         --viewer-inner-bg: #2d2e30;
@@ -125,10 +127,11 @@ $user_info_secondary = date('d/m/Y') . " - " . date('H:i');
         height: 100%;
     }
     .wm-text {
-        font-family: 'Roboto', Arial, sans-serif;
-        font-weight: bold;
-        font-size: 20px;
-        fill: var(--wm-color, rgba(255,255,255,0.1));
+        font-family: 'Arial', sans-serif;
+        font-weight: 800; /* Más negrita */
+        font-size: 24px;  /* Un poco más grande */
+        fill: var(--wm-color, rgba(0,0,0,0.25)); /* Opacidad base más alta */
+        text-transform: uppercase; /* Opcional: para darle un toque más formal */
     }
 
     /* Video Player */
@@ -200,13 +203,13 @@ if ($capsula->showmode == 0 || $capsula->showmode == 1) {
         
         <div class="capsula-viewer-wrapper no-select" oncontextmenu="return false;">
             <!-- Watermark Pattern (Light for Dark Video) -->
-            <div class="capsula-watermark-overlay" style="--wm-color: rgba(255,255,255,0.08);">
-                <svg>
+            <div class="capsula-watermark-overlay" style="--wm-color: rgba(255,255,255,0.15);">
+                <svg width="100%" height="100%">
                     <defs>
-                        <pattern id="wm-pattern-video" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
-                             <text x="200" y="200" text-anchor="middle" dominant-baseline="middle" transform="rotate(-45 200 200)" class="wm-text">
-                                 <tspan x="200" dy="-10"><?php echo $watermark_line_1; ?></tspan>
-                                 <tspan x="200" dy="25"><?php echo $watermark_line_2; ?></tspan>
+                        <pattern id="wm-pattern-video" x="0" y="0" width="500" height="500" patternUnits="userSpaceOnUse">
+                             <text x="250" y="250" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30 250 250)" class="wm-text">
+                                 <tspan x="250" dy="-15"><?php echo $watermark_line_1; ?></tspan>
+                                 <tspan x="250" dy="35" font-size="0.8em"><?php echo $watermark_line_2; ?></tspan>
                              </text>
                         </pattern>
                     </defs>
@@ -246,13 +249,13 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
                 
                 <!-- Watermark Pattern (Dark for White PDF) -->
                 <!-- Note: z-index must be higher than canvas. Canvas z-index is 50 in CSS above, so overlay needs >50 -->
-                <div class="capsula-watermark-overlay" style="--wm-color: rgba(0,0,0,0.12); z-index: 200;">
-                    <svg>
+                <div class="capsula-watermark-overlay" style="--wm-color: rgba(0,0,0,0.18); z-index: 200;">
+                    <svg width="100%" height="100%">
                         <defs>
-                            <pattern id="wm-pattern-pdf" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
-                                 <text x="200" y="200" text-anchor="middle" dominant-baseline="middle" transform="rotate(-45 200 200)" class="wm-text">
-                                     <tspan x="200" dy="-10"><?php echo $watermark_line_1; ?></tspan>
-                                     <tspan x="200" dy="25"><?php echo $watermark_line_2; ?></tspan>
+                            <pattern id="wm-pattern-pdf" x="0" y="0" width="500" height="500" patternUnits="userSpaceOnUse">
+                                 <text x="250" y="250" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30 250 250)" class="wm-text">
+                                     <tspan x="250" dy="-15"><?php echo $watermark_line_1; ?></tspan>
+                                     <tspan x="250" dy="35" font-size="0.8em"><?php echo $watermark_line_2; ?></tspan>
                                  </text>
                             </pattern>
                         </defs>
