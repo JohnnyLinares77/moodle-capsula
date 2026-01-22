@@ -208,8 +208,8 @@ if ($capsula->showmode == 0 || $capsula->showmode == 1) {
                     <defs>
                         <pattern id="wm-pattern-video" x="0" y="0" width="800" height="800" patternUnits="userSpaceOnUse">
                              <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" transform="rotate(-28 400 400)" class="wm-text">
-                                 <tspan x="400" dy="-10" font-size="30px"><?php echo $watermark_line_1; ?></tspan>
-                                 <tspan x="400" dy="40" font-size="20px"><?php echo $watermark_line_2; ?></tspan>
+                                 <tspan x="400" dy="-15" font-size="32px"><?php echo $watermark_line_1; ?></tspan>
+                                 <tspan x="400" dy="45" font-size="22px"><?php echo $watermark_line_2; ?></tspan>
                              </text>
                         </pattern>
                     </defs>
@@ -254,8 +254,8 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
                         <defs>
                             <pattern id="wm-pattern-pdf" x="0" y="0" width="800" height="800" patternUnits="userSpaceOnUse">
                                  <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" transform="rotate(-28 400 400)" class="wm-text">
-                                     <tspan x="400" dy="-10" font-size="30px"><?php echo $watermark_line_1; ?></tspan>
-                                     <tspan x="400" dy="40" font-size="20px"><?php echo $watermark_line_2; ?></tspan>
+                                     <tspan x="400" dy="-15" font-size="32px"><?php echo $watermark_line_1; ?></tspan>
+                                     <tspan x="400" dy="45" font-size="22px"><?php echo $watermark_line_2; ?></tspan>
                                  </text>
                             </pattern>
                         </defs>
