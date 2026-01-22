@@ -202,18 +202,15 @@ if ($capsula->showmode == 0 || $capsula->showmode == 1) {
         ?>
         
         <div class="capsula-viewer-wrapper no-select" oncontextmenu="return false;">
-            <!-- Watermark Pattern (Light for Dark Video) -->
-            <div class="capsula-watermark-overlay" style="z-index: 100;">
-                <svg width="100%" height="100%">
-                    <defs>
-                        <pattern id="wm-pattern-video" x="0" y="0" width="800" height="800" patternUnits="userSpaceOnUse">
-                             <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" transform="rotate(-28 400 400)" class="wm-text">
-                                 <tspan x="400" dy="-15" font-size="32px"><?php echo $watermark_line_1; ?></tspan>
-                                 <tspan x="400" dy="45" font-size="22px"><?php echo $watermark_line_2; ?></tspan>
-                             </text>
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#wm-pattern-video)" />
+            <!-- Watermark Centered (Single) -->
+            <div class="capsula-watermark-overlay" style="z-index: 100; display: flex; align-items: center; justify-content: center;">
+                <svg width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+                    <g transform="rotate(-28 500 500)">
+                        <text x="500" y="500" text-anchor="middle" dominant-baseline="middle" class="wm-text">
+                            <tspan x="500" dy="-20" font-size="40px"><?php echo $watermark_line_1; ?></tspan>
+                            <tspan x="500" dy="55" font-size="28px"><?php echo $watermark_line_2; ?></tspan>
+                        </text>
+                    </g>
                 </svg>
             </div>
             
@@ -247,19 +244,15 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
 
             <div class="capsula-content" style="position: relative;">
                 
-                <!-- Watermark Pattern (Dark for White PDF) -->
-                <!-- Note: z-index must be higher than canvas. Canvas z-index is 50 in CSS above, so overlay needs >50 -->
-                <div class="capsula-watermark-overlay" style="z-index: 200;">
-                    <svg width="100%" height="100%">
-                        <defs>
-                            <pattern id="wm-pattern-pdf" x="0" y="0" width="800" height="800" patternUnits="userSpaceOnUse">
-                                 <text x="400" y="400" text-anchor="middle" dominant-baseline="middle" transform="rotate(-28 400 400)" class="wm-text">
-                                     <tspan x="400" dy="-15" font-size="32px"><?php echo $watermark_line_1; ?></tspan>
-                                     <tspan x="400" dy="45" font-size="22px"><?php echo $watermark_line_2; ?></tspan>
-                                 </text>
-                            </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#wm-pattern-pdf)" />
+                <!-- Watermark Centered (Single) -->
+                <div class="capsula-watermark-overlay" style="z-index: 200; display: flex; align-items: center; justify-content: center;">
+                    <svg width="100%" height="100%" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+                        <g transform="rotate(-28 500 500)">
+                            <text x="500" y="500" text-anchor="middle" dominant-baseline="middle" class="wm-text">
+                                <tspan x="500" dy="-20" font-size="40px"><?php echo $watermark_line_1; ?></tspan>
+                                <tspan x="500" dy="55" font-size="28px"><?php echo $watermark_line_2; ?></tspan>
+                            </text>
+                        </g>
                     </svg>
                 </div>
 
