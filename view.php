@@ -26,21 +26,24 @@ $PAGE->set_heading(format_string($course->fullname));
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($capsula->name));
 
-if ($capsula->intro) {
-    echo $OUTPUT->box(format_module_intro('capsula', $capsula, $cm->id), 'generalbox mod_introbox', 'intro');
-}
+// NOTE: Content Description (Intro) is skipped to avoid potential duplication issues as requested.
 
 $fs = get_file_storage();
 
+// --- PREPARE USER DATA FOR OVERLAY ---
+$user_info_primary = "{$USER->firstname} {$USER->lastname} - {$USER->idnumber} - {$USER->email}";
+$user_info_secondary = date('d/m/Y') . " - " . date('H:i');
 
-// --- RENDERING START ---
+// --- START VIEWER CONTENT ---
 ?>
+
+<!-- Dependencies -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-    // Configuración global de PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 </script>
 
+<!-- Styles -->
 <style>
     :root {
         --viewer-bg: #202124;
@@ -49,7 +52,7 @@ $fs = get_file_storage();
         --scrollbar-track: #202124;
     }
 
-    /* Contenedor Principal 16:9 */
+    /* Main Container 16:9 */
     .capsula-viewer-wrapper {
         position: relative;
         width: 85%;
@@ -64,7 +67,7 @@ $fs = get_file_storage();
         overflow: hidden;
     }
 
-    /* Header del PDF (Zoom controls) */
+    /* Toolbar (Zoom) */
     .capsula-toolbar {
         height: 48px;
         background-color: rgba(0,0,0,0.8);
@@ -84,17 +87,17 @@ $fs = get_file_storage();
         cursor: pointer;
         padding: 8px;
         border-radius: 50%;
-        display: flex; /* Asegura centrado de iconos si los hubiera */
+        display: flex;
         align-items: center;
         justify-content: center;
         transition: background 0.2s;
-        font-size: 18px; /* Tamaño de los iconos/texto */
+        font-size: 18px;
     }
     .capsula-btn:hover {
         background-color: rgba(255,255,255,0.1);
     }
     
-    /* Área de contenido (Video o PDF) */
+    /* Content Area */
     .capsula-content {
         flex: 1;
         position: relative;
@@ -105,56 +108,7 @@ $fs = get_file_storage();
         align-items: center;
     }
 
-    /* Video específico */
-    .capsula-video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain; /* Mantiene aspecto sin recortar */
-        outline: none;
-    }
-
-    /* PDF Scroll y Container */
-    #pdf-scroll-container {
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        overflow-x: auto;
-        position: relative;
-        /* Scrollbar styling */
-        scrollbar-width: thin;
-        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    }
-    
-    #pdf-scroll-container::-webkit-scrollbar {
-        width: 12px;
-        height: 12px;
-    }
-    #pdf-scroll-container::-webkit-scrollbar-track {
-        background: var(--scrollbar-track);
-    }
-    #pdf-scroll-container::-webkit-scrollbar-thumb {
-        background-color: var(--scrollbar-thumb);
-        border-radius: 6px;
-        border: 3px solid var(--viewer-bg);
-    }
-
-    #pdf-render-layer {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px 0;
-        min-height: 100%; /* Permite que el overlay crezca con el scroll */
-        position: relative;
-        z-index: 1; /* Bajo el overlay */
-    }
-
-    canvas { 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        margin-bottom: 15px;
-        max-width: 95%; /* Responsive */
-    }
-
-    /* Overlay de Información (Estilo Drive) */
+    /* Message Overlay */
     .capsula-info-overlay {
         position: absolute;
         top: 20px;
@@ -185,24 +139,52 @@ $fs = get_file_storage();
         margin-top: 2px;
     }
 
-    /* Watermark de fondo (opcional, estilo anterior conservado pero sutil) */
-    .watermark-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
+    /* Video Player */
+    .capsula-video {
         width: 100%;
-        height: 100%; /* Se ajustará dinámicamente en JS para PDF */
-        pointer-events: none;
-        z-index: 200; /* Por encima de todo para seguridad */
-        overflow: hidden;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-content: flex-start;
-        opacity: 0.4; /* Muy sutil */
+        height: 100%;
+        object-fit: contain; 
+        outline: none;
+    }
+
+    /* PDF Scroll Area */
+    #pdf-scroll-container {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: auto;
+        position: relative;
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     }
     
-    /* Prevenir selección y clic derecho */
+    /* Custom Scrollbar */
+    #pdf-scroll-container::-webkit-scrollbar { width: 12px; height: 12px; }
+    #pdf-scroll-container::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    #pdf-scroll-container::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb);
+        border-radius: 6px;
+        border: 3px solid var(--viewer-bg);
+    }
+
+    #pdf-render-layer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+        min-height: 100%;
+        position: relative;
+        z-index: 1;
+    }
+
+    canvas { 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        margin-bottom: 15px;
+        /* Allow landscape to fit */
+        max-width: 95%; 
+        height: auto;
+    }
+
     .no-select {
         user-select: none;
         -webkit-user-select: none;
@@ -210,21 +192,15 @@ $fs = get_file_storage();
 </style>
 
 <?php
-// Preparar datos del usuario
-$user_info_primary = "{$USER->firstname} {$USER->lastname} - {$USER->idnumber} - {$USER->email}";
-$user_info_secondary = date('d/m/Y') . " - " . date('H:i');
-
-// --- RENDERING VIDEO ---
+// --- 1. VIDEO RENDERING ---
 if ($capsula->showmode == 0 || $capsula->showmode == 1) {
-    echo '<h3>'.get_string('videoview', 'mod_capsula').'</h3>'; // Opcional: título si se desea separar
-    
     $video_files = $fs->get_area_files($context->id, 'mod_capsula', 'video', 0, 'sortorder, itemid, filepath, filename', false);
     if ($video_files) {
         $video = reset($video_files);
         $vurl = moodle_url::make_pluginfile_url($context->id, 'mod_capsula', 'video', 0, '/', $video->get_filename());
         ?>
+        
         <div class="capsula-viewer-wrapper no-select" oncontextmenu="return false;">
-            <!-- Info Overlay -->
             <div class="capsula-info-overlay">
                 <span class="capsula-info-line capsula-info-primary"><?php echo $user_info_primary; ?></span>
                 <span class="capsula-info-line capsula-info-secondary"><?php echo $user_info_secondary; ?></span>
@@ -237,13 +213,13 @@ if ($capsula->showmode == 0 || $capsula->showmode == 1) {
                 </video>
             </div>
         </div>
+        
         <?php
     }
 }
 
-// --- RENDERING PDF ---
+// --- 2. PDF RENDERING ---
 if ($capsula->showmode == 0 || $capsula->showmode == 2) {
-    
     $pdf_files = $fs->get_area_files($context->id, 'mod_capsula', 'pdf', 0, 'sortorder, itemid, filepath, filename', false);
     if ($pdf_files) {
         $pdf = reset($pdf_files);
@@ -259,15 +235,12 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
             </div>
 
             <div class="capsula-content" style="position: relative;">
-                <!-- Info Overlay (Fixed on screen relative to viewer) -->
                 <div class="capsula-info-overlay">
                     <span class="capsula-info-line capsula-info-primary"><?php echo $user_info_primary; ?></span>
                     <span class="capsula-info-line capsula-info-secondary"><?php echo $user_info_secondary; ?></span>
                 </div>
 
-                <!-- Scroll Container -->
                 <div id="pdf-scroll-container" oncontextmenu="return false;" class="no-select">
-                     <!-- Rendering Layer -->
                      <div id="pdf-render-layer"></div>
                 </div>
             </div>
@@ -275,11 +248,10 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
 
         <script>
             let pdfDoc = null;
-            let currentScale = 1.0; // Escala base
-            let isRendering = false;
+            let currentScale = 1.0;
             const pdfUrl = '<?php echo $purl; ?>';
 
-            // Evitar shortcuts y clic derecho
+            // Security: Disable Context Menu & Shortcuts
             document.addEventListener('contextmenu', event => event.preventDefault());
             document.addEventListener('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
@@ -287,43 +259,45 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
                 }
             });
 
-            // Cargar documento
+            // Load PDF
             pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
                 pdfDoc = pdf;
                 renderAllPages(currentScale);
             }).catch(err => {
                 console.error("Error loading PDF: " + err);
-                document.getElementById('pdf-render-layer').innerHTML = "<div style='color:white; padding:20px;'>Error cargando documento.</div>";
+                const container = document.getElementById('pdf-render-layer');
+                if(container) container.innerHTML = "<div style='color:white; padding:20px;'>Error cargando documento.</div>";
             });
 
             function renderAllPages(scale) {
                 const container = document.getElementById('pdf-render-layer');
-                container.innerHTML = ''; // Limpiar previo render
+                if(!container) return;
                 
-                // Actualizar label de zoom
-                document.getElementById('zoom-level').innerText = Math.round(scale * 100) + "%";
+                container.innerHTML = '';
+                const zoomLabel = document.getElementById('zoom-level');
+                if(zoomLabel) zoomLabel.innerText = Math.round(scale * 100) + "%";
 
                 const renderPage = (num) => {
                     if (num > pdfDoc.numPages) return;
 
                     pdfDoc.getPage(num).then(page => {
-                        const viewport = page.getViewport({ scale: scale * 1.5 }); // High-DPI upscale logic
-                        // Ajustamos dimensiones canvas based on scale
+                        // High DPI Rendering: Render at 1.5x requested scale
+                        const outputScale = scale * 1.5;
+                        const viewport = page.getViewport({ scale: outputScale });
+
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
                         
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
                         
-                        // Controlar tamaño visual vs resolución real
-                        // La clase CSS max-width: 95% se encarga de que no desborde horizontalmente
-                        // pero queremos que el usuario pueda hacer zoom real.
-                        // Para zoom real, quizás sea mejor dejar que el canvas crezca y el container tenga scroll.
-                        // Modificamos el estilo inline del canvas para que obedezca al scale si supera el contenedor
-                        
-                        canvas.style.width = (viewport.width / 1.5) + "px"; 
-                        canvas.style.height = (viewport.height / 1.5) + "px";
-                        canvas.style.maxWidth = 'none'; // Overrule CSS restriction for zoom functionality
+                        // Visual Size (CSS)
+                        // We set width ensuring it respects CSS max-width 95%
+                        const displayWidth = viewport.width / 1.5;
+                        canvas.style.width = displayWidth + "px";
+                        // Remove height restriction to maintain aspect ratio
+                        canvas.style.height = "auto"; 
+                        canvas.style.maxWidth = "95%"; // Responsive constraint
 
                         container.appendChild(canvas);
 
@@ -333,11 +307,10 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
                         };
                         
                         page.render(renderContext).promise.then(() => {
-                            renderPage(num + 1); // Render next page sequentially
+                            renderPage(num + 1);
                         });
                     });
                 };
-                
                 renderPage(1);
             }
 
@@ -352,12 +325,9 @@ if ($capsula->showmode == 0 || $capsula->showmode == 2) {
                 currentScale -= 0.25;
                 renderAllPages(currentScale);
             }
-
         </script>
         <?php
     }
 }
 
 echo $OUTPUT->footer();
-
-
