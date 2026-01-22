@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/drivepdf/db" VERSION="2025111700" COMMENT="Drive PDF module"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
+
+    <TABLES>
+        <TABLE NAME="drivepdf" COMMENT="Drive PDF activities">
+            <FIELDS>
+                <FIELD NAME="id"          TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="course"      TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="name"        TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT=""/>
+                <FIELD NAME="intro"       TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="introformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0"/>
+
+                <!-- URL original que escribe el profesor -->
+                <FIELD NAME="driveurl"    TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT=""/>
+
+                <!-- ID del archivo en Google Drive -->
+                <FIELD NAME="fileid"      TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT=""/>
+
+                <!-- URL para el visor de Drive: https://drive.google.com/file/d/FILE_ID/preview -->
+                <FIELD NAME="embedurl"    TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT=""/>
+
+                <!-- Altura del iframe en px (luego lo dejaremos de usar) -->
+                <FIELD NAME="height"      TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="600"/>
+
+                <FIELD NAME="timecreated"  TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+            </FIELDS>
+
+
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="coursefk" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>
